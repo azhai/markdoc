@@ -11,9 +11,6 @@ from markdoc.render import make_relative
 
 if not mimetypes.inited:
     mimetypes.init()
-# Assume all HTML files are XHTML.
-mimetypes.types_map['.html'] = mimetypes.types_map['.xhtml']
-
 
 class MarkdocWSGIApplication(object):
     
@@ -162,7 +159,7 @@ class MarkdocWSGIApplication(object):
             
             template = self.config.template_env.get_template('%d.html' % status)
             response.unicode_body = template.render(context)
-            response.content_type = mimetypes.types_map['.xhtml']
+            response.content_type = mimetypes.types_map['.html']
         else:
             del response.content_length
             del response.content_type
@@ -206,9 +203,6 @@ def serve_file(filename, content_type=None, chunk_size=4096):
     
     if content_type is None:
         content_type = mimetypes.guess_type(filename)[0] or 'application/octet-stream'
-    
-    if content_type.startswith('text/html'):
-        content_type = content_type.replace('text/html', 'application/xhtml+xml')
     
     def chunked_read(chunk_size=4096):
         fp = open(filename, 'rb')
