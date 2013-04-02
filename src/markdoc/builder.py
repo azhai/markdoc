@@ -229,7 +229,7 @@ def get_title(filename, data):
         return match.group(1)
     
     name, extension = p.splitext(p.basename(filename))
-    return re.sub(r'[-_]+', ' ', name).title()
+    return re.sub(r'[_]+', ' ', name).title()
 
 
 def humansize(size, base=1024):
