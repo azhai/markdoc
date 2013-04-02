@@ -224,12 +224,8 @@ def get_title(filename, data):
     if match:
         return match.group(1).strip()
     
-    match = re.search(r'<h1[^>]*>([^<]+)</h1>', data, re.IGNORECASE)
-    if match:
-        return match.group(1)
-    
     name, extension = p.splitext(p.basename(filename))
-    return re.sub(r'[_]+', ' ', name).title()
+    return name.title()
 
 
 def humansize(size, base=1024):
