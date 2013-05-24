@@ -84,10 +84,12 @@
       {% block body_footer %}
       <div id="footer">
         <p>
+          &copy; {{ current_year }}
           {% if 'wiki-name' in config %}
             {{ config['wiki-name']|e }} —
           {% endif %}
-          Powered by <a href="http://markdoc.org/">Markdoc</a>.
+          Powered by <a href="https://github.com/azhai/markdoc">azhai/markdoc</a> 
+          base on <a href="http://markdoc.org/">Markdoc</a>.
         </p>
       </div>
       {% endblock body_footer %}

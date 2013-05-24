@@ -29,12 +29,13 @@
   <table id="pages">
     {% for page in pages %}
       <tr>
-        <td class="size">{{ page.humansize }}</td>
+        <td class="date">{{ page.date }}</td>
         <td class="name">
-          <a href="{{ make_relative(page.href)|e }}" title="{{ page.title|e }}">
+          <a href="{{ make_relative(page.href)|e }}.html" title="{{ page.title|e }}">
             {{ page.title|e }}
           </a>
         </td>
+        <td class="size">{{ page.humansize }}</td>
       </tr>
     {% endfor %}
   </table>
@@ -46,12 +47,12 @@
   <table id="files">
     {% for file in files %}
       <tr>
-        <td class="size">{{ file.humansize }}</td>
         <td class="name">
           <a href="{{ make_relative(file.href)|e }}">
             <code>{{ file.basename|e }}</code>
           </a>
         </td>
+        <td class="size">{{ file.humansize }}</td>
       </tr>
     {% endfor %}
   </table>

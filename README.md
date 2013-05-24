@@ -75,8 +75,7 @@ The minimum requirements to run the Markdoc utility are:
 
 ### Installation
 
-    $ easy_install Markdoc  # OR
-    $ pip install Markdoc
+    $ pip install https://github.com/azhai/markdoc/tarball/master
 
 
 ### Making a Wiki
@@ -88,6 +87,103 @@ The minimum requirements to run the Markdoc utility are:
     markdoc build
     markdoc serve
     # .. open http://localhost:8008/ in a browser ...
+    
+    
+### Example of a blog python-md5.md
+
+    date:       2012-05-15
+    title:      Python计算文件的MD5
+    category:   Python
+    tag:        python, md5, hash
+
+
+    下面两个函数，一个用于计算字符串的MD5，另一个用于计算指定文件的MD5
+
+        :::python
+        #-*- coding: utf-8 -*-
+
+        import hashlib
+
+
+        def md5hex(word):
+            """ MD5加密算法，返回32位小写16进制符号 """
+            if isinstance(word, unicode):
+                word = word.encode("utf-8")
+            elif not isinstance(word, str):
+                word = str(word)
+            m = hashlib.md5()
+            m.update(word)
+            return m.hexdigest()
+
+
+        def md5sum(fname):
+            """ 计算文件的MD5值 """
+            def read_chunks(fh):
+                fh.seek(0)
+                chunk = fh.read(8096)
+                while chunk:
+                    yield chunk
+                    chunk = fh.read(8096)
+                else: #最后要将游标放回文件开头
+                    fh.seek(0)
+            m = hashlib.md5()
+            if isinstance(fname, basestring) \
+                    and os.path.exists(fname):
+                with open(fname, "rb") as fh:
+                    for chunk in read_chunks(fh):
+                        m.update(chunk)
+            #上传的文件缓存 或 已打开的文件流
+            elif fname.__class__.__name__ in ["StringIO", "StringO"] \
+                        or isinstance(fname, file):
+                for chunk in read_chunks(fname):
+                    m.update(chunk)
+            else:
+                return ""
+            return m.hexdigest()
+    
+    
+### Example of a markdoc.yaml
+    
+    # Metadata
+    wiki-name: "xxx's Blog"
+    wiki-author: "xxx"
+    #google-analytics: UA-XXXXXX-X
+
+    # Directories
+    hide-prefix: ""
+    wiki-dir: "content"
+    static-dir: "static"
+    html-dir: "html"
+    template-dir: ""
+    temp-dir: "tmp"
+    cvs-exclude: true
+
+    # Building
+    document-extensions: [.md, .rst]
+    generate-listing: always
+    listing-filename: "default.html"
+    use-default-static: true
+    use-default-templates: true
+    disqus-sitename: "xxx-disqus"
+
+    # Rendering
+    markdown:
+      safe-mode: false
+      output-format: xhtml1
+      extensions: [meta, codehilite, def_list, sane_lists, toc]
+      extension-configs:
+        codehilite:
+          css_class: codehilite
+          force_linenos: true
+
+    # Serving
+    server:
+      bind: '192.168.0.1'
+      port: 8008
+      num-threads: 10
+      #name: 'myblog.github.com'
+      request-queue-size: 5
+      timeout: 10
 
 
 ## (Un)license

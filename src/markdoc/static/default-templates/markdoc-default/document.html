@@ -1,3 +1,30 @@
 {% extends 'base.html' %}
 
+{% block content_header %}
+<h1><a class="article-title" href="{{ slug|e }}">{{ title }}</a></h1>
+<div class="article-metas">
+    Date：{{ date }} Author：{{ author }} 
+    Category：{{ category|join(', ') }} 
+    Tag：{{ tag|join(', ') }}
+</div>
+{% endblock content_header %}
+
 {% block content %}{{ content }}{% endblock %}
+
+{% block content_footer %}
+{% if disqus_sitename %}
+<h2>Comments</h2>
+<div id="disqus_thread"></div>
+<script type="text/javascript">
+    var disqus_shortname = '{{ disqus_sitename }}'; 
+    var disqus_title = '{{ title }}';
+
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+{% endif %}
+{% endblock content_footer %}

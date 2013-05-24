@@ -4,6 +4,7 @@ import os
 import os.path as p
 import operator
 import re
+from datetime import datetime
 
 from markdoc.cache import DocumentCache, RenderCache, read_from
 from markdoc.config import Config
@@ -11,20 +12,32 @@ from markdoc.render import make_relative
 
 
 Config.register_default('listing-filename', '_list.html')
+Config.register_default('disqus-sitename', '')
 
 
 class Builder(object):
     
     """An object to handle all the parts of the wiki building process."""
     
+    doc_metas = {} #The result of all markdown.MetaExtension
+    
+    
     def __init__(self, config):
         self.config = config
+        self.globals = {
+            'current_year': datetime.now().strftime('%Y'),
+            'disqus_sitename': self.config['disqus-sitename'],
+        }
         
         self.doc_cache = DocumentCache(base=self.config.wiki_dir)
         
         def render_func(path, doc):
             level = len(path.lstrip('/').split('/')) - 1
-            return self.config.markdown(curr_path=path).convert(doc)
+            md = self.config.markdown(curr_path=path)
+            content = md.convert(doc)
+            if 'meta' in self.config['markdown.extensions']:
+                self.__class__.doc_metas[path] = md.Meta
+            return content
         self.render_cache = RenderCache(render_func, self.doc_cache)
         
         render_doc_func = lambda path, doc: self.render_document(path, cache=False)
@@ -132,6 +145,10 @@ class Builder(object):
                 file_dict['href'] = '/' + file_dict['href']
             
             if p.isdir(fs_abs_path):
+                if directory.startswith('.') or basename.startswith('.'):
+                    continue
+                elif directory == 'media' or directory.startswith('media') or basename == 'media':
+                    continue
                 file_dict['href'] += '/'
                 sub_directories.append(file_dict)
             
@@ -147,7 +164,11 @@ class Builder(object):
                 if p.splitext(basename)[1] == (p.extsep + 'html'):
                     # Get the title from the file.
                     contents = read_from(fs_abs_path)
-                    file_dict['title'] = get_title(file_dict['slug'], contents)
+                    path = p.join(directory.strip('/'), basename.replace('.html', '.md'))
+                    try:
+                        file_dict.update(self.meta(path))
+                    except:
+                        file_dict['title'] = get_title(file_dict['slug'], contents)
                     # Remove .html from the end of the href.
                     file_dict['href'] = p.splitext(file_dict['href'])[0]
                     pages.append(file_dict)
@@ -155,7 +176,7 @@ class Builder(object):
                     files.append(file_dict)
         
         sub_directories.sort(key=lambda directory: directory['basename'])
-        pages.sort(key=lambda page: page['title'])
+        pages.sort(key=lambda page: page['date'], reverse=True)
         files.sort(key=lambda file_: file_['basename'])
         
         return {
@@ -171,18 +192,39 @@ class Builder(object):
     
     def title(self, path, cache=True):
         return get_title(path, self.render(path, cache=cache))
+        
+    def meta(self, path, cache=True):
+        metas = {}
+        if path in self.doc_metas:
+            for k, vals in self.doc_metas[path].items():
+                k = k.lower()
+                if k in [u'category', u'tag']:
+                    metas[k] = []
+                    for val in vals:
+                        metas[k].extend([v.strip() for v in val.split(u',') if v.strip()])
+                else:
+                    metas[k] = vals[0]
+        if not metas.has_key('author'): #Use the global author
+            metas['author'] = self.config['wiki-author']
+        if not metas.has_key('slug'): #Use the path
+            metas['slug'] = path
+        if not metas.has_key('date'): #Use the file mtime
+            mtime = os.stat(p.join(self.config['wiki-dir'], path)).st_mtime
+            metas['date'] = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
+        return metas        
     
     def render_document(self, path, cache=True):
         if cache:
             return self.document_render_cache.render(path)
         
-        context = {}
+        context = self.meta(path)
         context['content'] = self.render(path)
-        context['title'] = self.title(path)
+        if not context.has_key('title'):
+            context['title'] = self.title(path)
         context['crumbs'] = self.crumbs(path)
         context['make_relative'] = lambda href: make_relative(path, href)
         
-        template = self.config.template_env.get_template('document.html')
+        template = self.config.template_env.get_template('document.html', globals=self.globals)
         return template.render(context)
     
     def render_listing(self, path):
@@ -201,7 +243,7 @@ class Builder(object):
         context['crumbs'] = crumbs
         context['make_relative'] = lambda href: make_relative(path + '/', href)
         
-        template = self.config.template_env.get_template('listing.html')
+        template = self.config.template_env.get_template('listing.html', globals=self.globals)
         return template.render(context)
 
 
