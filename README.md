@@ -75,7 +75,9 @@ The minimum requirements to run the Markdoc utility are:
 
 ### Installation
 
-    $ pip install https://github.com/azhai/markdoc/tarball/master
+    $ pip install https://github.com/azhai/markdoc/tarball/master #OR
+    $ pip install https://gitcafe.com/azhai/markdoc/tarball/master #OR
+    $ pip install https://git.oschina.net/azhai/markdoc/tarball/master
 
 
 ### Making a Wiki
